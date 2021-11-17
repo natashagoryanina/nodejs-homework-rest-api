@@ -10,7 +10,7 @@ const {
   updateContact,
 } = require('../../model/index.js')
 
-const contactsPath = path.join(__dirname, '../../module/contacts.json')
+const contactsPath = path.join(__dirname, '../../model/contacts.json')
 
 router.get('/', async (req, res, next) => {
   const contacts = await listContacts()
@@ -48,24 +48,16 @@ router.delete('/:contactId', async (req, res, next) => {
     res.json({ message: 'contact deleted' })
   } catch (err) {
     res.status(404)
-    res.json({ message: 'Not found' })
+    res.json({ message: 'Not Found' })
   }
 })
 
 router.patch('/:contactId', async (req, res, next) => {
-  const { contactId } = req.params
-  const { name } = req.body
-  const contacts = await getContacts()
-  const changedContact = await contacts.find(elem => elem.id === contactId)
-  changedContact.name = name
-  console.log(changedContact)
-  const contactsList = await contacts.filter(elem => elem.id !== contactId)
-  contactsList.push(changedContact)
-  console.log(contactsList)
+  const result = await updateContact(req.params.contactId, req.body)
   try {
-    await fs.writeFile(contactsPath, contactsList)
+    await fs.writeFile(contactsPath, JSON.stringify(result))
     res.status(200)
-    res.json(contactsList)
+    res.json(result)
   } catch (err) {
     res.status(400)
     res.json({ message: 'missing fields' })

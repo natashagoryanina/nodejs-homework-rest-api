@@ -1,6 +1,5 @@
 const { v4: uuidv4 } = require('uuid')
 const fs = require('fs').promises
-// const contacts = require('./contacts.json')
 const path = require('path')
 const contactsPath = path.join(__dirname, './contacts.json')
 
@@ -43,7 +42,15 @@ const addContact = async (body) => {
   return contactsList
 }
 
-const updateContact = async (contactId, body) => {}
+const updateContact = async (contactId, body) => {
+  const { name } = body
+  const contacts = await getContacts()
+  const changedContact = await contacts.find(elem => elem.id === contactId)
+  changedContact.name = name
+  const contactsList = await contacts.filter(elem => elem.id !== contactId)
+  contactsList.push(changedContact)
+  return contactsList
+}
 
 module.exports = {
   listContacts,

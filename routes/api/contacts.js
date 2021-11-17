@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const fs = require('fs').promises
 const path = require('path')
+const { body, validationResult } = require('express-validator')
 const {
   listContacts,
   getContactById,
@@ -27,17 +28,25 @@ router.get('/:contactId', async (req, res, next) => {
   }
 })
 
-router.post('/', async (req, res, next) => {
-  const result = await addContact(req.body)
-  console.log(result)
-  try {
-    await fs.writeFile(contactsPath, JSON.stringify(result))
-    res.json(result)
-  } catch (err) {
-    res.status(400)
-    res.json({ message: 'missing required name field' })
-  }
-})
+router.post('/',
+  body('name').isLength({ min: 2 }),
+  body('email').isEmail(),
+  body('phone').isMobilePhone(),
+  async (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+    const result = await addContact(req.body)
+    console.log(result)
+    try {
+      await fs.writeFile(contactsPath, JSON.stringify(result))
+      res.json(result)
+    } catch (err) {
+      res.status(400)
+      res.json({ message: 'missing required name field' })
+    }
+  })
 
 router.delete('/:contactId', async (req, res, next) => {
   const newContactsList = await removeContact(req.params.contactId)
@@ -52,16 +61,24 @@ router.delete('/:contactId', async (req, res, next) => {
   }
 })
 
-router.patch('/:contactId', async (req, res, next) => {
-  const result = await updateContact(req.params.contactId, req.body)
-  try {
-    await fs.writeFile(contactsPath, JSON.stringify(result))
-    res.status(200)
-    res.json(result)
-  } catch (err) {
-    res.status(400)
-    res.json({ message: 'missing fields' })
-  }
-})
+router.patch('/:contactId',
+  body('name').isLength({ min: 2 }),
+  body('email').isEmail(),
+  body('phone').isMobilePhone(),
+  async (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+    const result = await updateContact(req.params.contactId, req.body)
+    try {
+      await fs.writeFile(contactsPath, JSON.stringify(result))
+      res.status(200)
+      res.json(result)
+    } catch (err) {
+      res.status(400)
+      res.json({ message: 'missing fields' })
+    }
+  })
 
 module.exports = router

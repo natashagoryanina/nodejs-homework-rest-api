@@ -17,9 +17,10 @@ const get = async (req, res, next) => {
 }
 
 const getById = async (req, res, next) => {
-  const { id } = req.params
+  console.log(req.params)
+  const { contactId } = req.params
   try {
-    const result = await service.getContactsById(id)
+    const result = await service.getContactsById(contactId)
     if (result) {
       res.json({
         status: 'success',
@@ -30,7 +31,7 @@ const getById = async (req, res, next) => {
       res.status(404).json({
         status: 'error',
         code: 404,
-        message: `Can't find contact by id: ${id}`,
+        message: `Can't find contact by id: ${contactId}`,
         data: 'Not Found',
       })
     }
@@ -56,10 +57,10 @@ const create = async (req, res, next) => {
 }
 
 const update = async (req, res, next) => {
-  const { id } = req.params
-  const { name, email, phone, favorite } = req.body
+  const { contactId } = req.params
+  const { name, email, phone } = req.body
   try {
-    const result = await service.updateContact(id, { name, email, phone, favorite })
+    const result = await service.updateContact(contactId, { name, email, phone })
     if (result) {
       res.json({
         status: 'success',
@@ -70,7 +71,7 @@ const update = async (req, res, next) => {
       res.status(404).json({
         status: 'error',
         code: 404,
-        message: `Can't find contact by id: ${id}`,
+        message: `Can't find contact by id: ${contactId}`,
         data: 'Not Found',
       })
     }
@@ -81,11 +82,11 @@ const update = async (req, res, next) => {
 }
 
 const updateStatus = async (req, res, next) => {
-  const { id } = req.params
+  const { contactId } = req.params
   const { favorite = false } = req.body
 
   try {
-    const result = await service.updateContact(id, { favorite })
+    const result = await service.updateContact(contactId, { favorite })
     if (result) {
       res.json({
         status: 'success',
@@ -96,7 +97,7 @@ const updateStatus = async (req, res, next) => {
       res.status(404).json({
         status: 'error',
         code: 404,
-        message: `Can't find contact by id: ${id}`,
+        message: `Can't find contact by id: ${contactId}`,
         data: 'Not Found',
       })
     }
@@ -107,10 +108,10 @@ const updateStatus = async (req, res, next) => {
 }
 
 const remove = async (req, res, next) => {
-  const { id } = req.params
+  const { contactId } = req.params
 
   try {
-    const result = await service.removeContact(id)
+    const result = await service.removeContact(contactId)
     if (result) {
       res.json({
         status: 'success',
@@ -121,7 +122,7 @@ const remove = async (req, res, next) => {
       res.status(404).json({
         status: 'error',
         code: 404,
-        message: `Can't find contact by id: ${id}`,
+        message: `Can't find contact by id: ${contactId}`,
         data: 'Not Found',
       })
     }
@@ -139,64 +140,3 @@ module.exports = {
   updateStatus,
   remove,
 }
-// const { v4: uuidv4 } = require('uuid')
-// const fs = require('fs').promises
-// const path = require('path')
-// const contactsPath = path.join(__dirname, './contacts.json')
-
-// const getContacts = async () => {
-//   try {
-//     const result = await fs.readFile(contactsPath, 'utf-8')
-//     return JSON.parse(result)
-//   } catch (err) {
-//     throw new Error(err)
-//   }
-// }
-
-// const listContacts = async () => {
-//   const contacts = await getContacts()
-//   return contacts
-// }
-
-// const getContactById = async (contactId) => {
-//   const contacts = await getContacts()
-//   const contact = await contacts.find(elem => elem.id === contactId)
-//   return contact
-// }
-
-// const removeContact = async (contactId) => {
-//   const contacts = await getContacts()
-//   const result = await contacts.filter(elem => elem.id !== contactId)
-//   return result
-// }
-
-// const addContact = async (body) => {
-//   const contactsList = await getContacts()
-//   const { name, email, phone } = body
-//   const newContact = {
-//     id: uuidv4(),
-//     name,
-//     email,
-//     phone,
-//   }
-//   contactsList.push(newContact)
-//   return contactsList
-// }
-
-// const updateContact = async (contactId, body) => {
-//   const { name } = body
-//   const contacts = await getContacts()
-//   const changedContact = await contacts.find(elem => elem.id === contactId)
-//   changedContact.name = name
-//   const contactsList = await contacts.filter(elem => elem.id !== contactId)
-//   contactsList.push(changedContact)
-//   return contactsList
-// }
-
-// module.exports = {
-//   listContacts,
-//   getContactById,
-//   removeContact,
-//   addContact,
-//   updateContact,
-// }

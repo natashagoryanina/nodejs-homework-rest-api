@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const mongoosePaginate = require('mongoose-paginate-v2')
 const Schema = mongoose.Schema
 
 const contacts = new Schema({
@@ -11,7 +12,8 @@ const contacts = new Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    validate: [/\S+@\S+\.\S+/, 'not valid']
+    validate: [/\S+@\S+\.\S+/, 'not valid'],
+    unique: true
   },
   phone: {
     type: String,
@@ -21,9 +23,16 @@ const contacts = new Schema({
   favorite: {
     type: Boolean,
     default: false
+  },
+  owner: {
+    type: mongoose.ObjectId,
+    ref: 'user',
   }
-}, { timestamps: true })
+}, { versionKey: false, timestamps: true })
 
+contacts.plugin(mongoosePaginate)
 const Contacts = mongoose.model('contacts', contacts)
+
+Contacts.paginate().then({})
 
 module.exports = Contacts

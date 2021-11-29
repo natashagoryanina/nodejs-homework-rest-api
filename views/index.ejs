@@ -1,0 +1,11 @@
+<% if (message) { %>
+    <h4>
+        <%= message %>
+    </h4>
+    <% } %>
+        <form action="/login" method="POST">
+            <input name="email" placeholder="email">
+            <input name="password" type="password" placeholder="password">
+            <button type="submit">sign in</button>
+        </form>
+        <a href="/registration">sign up</a>

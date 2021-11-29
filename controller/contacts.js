@@ -17,7 +17,6 @@ const get = async (req, res, next) => {
 }
 
 const getById = async (req, res, next) => {
-  console.log(req.params)
   const { contactId } = req.params
   try {
     const result = await service.getContactsById(contactId)
@@ -140,6 +139,39 @@ const remove = async (req, res, next) => {
   }
 }
 
+const getFave = async (req, res, next) => {
+  const { favorite } = req.query
+  try {
+    const results = await service.getFavoriteContacts(favorite)
+    res.json({
+      status: 'success',
+      code: 200,
+      data: {
+        contacts: results,
+      },
+    })
+  } catch (err) {
+    console.error(err)
+    next(err)
+  }
+}
+
+const listContactsController = async (req, res, next) => {
+  try {
+    const userId = req.user.id
+    const result = await service.listContacts(userId, req.query)
+    return res.json({
+      status: 'success',
+      code: 200,
+      data: {
+        ...result,
+      },
+    })
+  } catch (e) {
+    next(e)
+  }
+}
+
 module.exports = {
   get,
   getById,
@@ -147,4 +179,6 @@ module.exports = {
   update,
   updateStatus,
   remove,
+  getFave,
+  listContactsController
 }

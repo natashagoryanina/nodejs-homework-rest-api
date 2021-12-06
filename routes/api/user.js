@@ -88,7 +88,7 @@ router.post('/signup', async (req, res, next) => {
       from: 'pavlaherd@gmail.com',
       to: email,
       subject: 'Email varification',
-      html: `<a href="http://127.0.0.1/users/verify/${verifyToken}">Email varification</a>`,
+      html: `<a href="http://127.0.0.1:3009/api/users/verify/${verifyToken}">Email varification</a>`,
     }
 
     transporter
@@ -235,9 +235,8 @@ router.patch('/avatars', upload.single('avatar'), auth, async (req, res, next) =
 })
 
 router.get('/verify/:verificationToken', auth, async (req, res, next) => {
-  const { verificationToken } = req.params
   const { _id } = req.user
-  const user = await User.findOne({ verifyToken: verificationToken })
+  const user = await User.findById(_id)
 
   if (user) {
     const result = await User.findByIdAndUpdate(_id, { verify: true, verifyToken: null })

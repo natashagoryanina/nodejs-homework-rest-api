@@ -7,6 +7,8 @@ const Jimp = require('jimp')
 const fs = require('fs').promises
 const multer = require('multer')
 const path = require('path')
+const { v4: uuidv4 } = require('uuid')
+const transporter = require('../../email.js')
 const User = require('../../service/schemas/user.js')
 require('dotenv').config()
 const secret = process.env.SECRET
@@ -58,6 +60,7 @@ router.post('/login', async (req, res, next) => {
 router.post('/signup', async (req, res, next) => {
   const { username, email, password } = req.body
   const user = await User.findOne({ email })
+
   if (user) {
     return res.status(409).json({
       status: 'error',
@@ -66,11 +69,33 @@ router.post('/signup', async (req, res, next) => {
       data: 'Conflict',
     })
   }
+
   try {
     const avatarURL = gravatar.url(email, { protocol: 'https', s: '100' })
-    const newUser = new User({ username, email, avatarURL })
+    const verifyToken = uuidv4()
+
+    const newUser = new User({
+      username,
+      email,
+      avatarURL,
+      verifyToken
+    })
+
     newUser.setPassword(password)
     await newUser.save()
+
+    const emailOptions = {
+      from: 'pavlaherd@gmail.com',
+      to: email,
+      subject: 'Email varification',
+      html: `<a href="http://127.0.0.1:3009/api/users/verify/${verifyToken}">Email varification</a>`,
+    }
+
+    transporter
+      .sendMail(emailOptions)
+      .then((info) => console.log(info))
+      .catch((err) => console.log(err))
+
     res.status(201).json({
       status: 'success',
       code: 201,
@@ -86,7 +111,7 @@ router.post('/signup', async (req, res, next) => {
 
 router.get('/list', auth, (req, res, next) => {
   const { username } = req.user
-  console.log(req.user)
+
   res.json({
     status: 'success',
     code: 200,
@@ -99,7 +124,7 @@ router.get('/list', auth, (req, res, next) => {
 router.get('/logout', auth, async (req, res) => {
   const { _id } = req.user
   const user = await User.findById(_id)
-  console.log(user)
+
   if (user) {
     User.findByIdAndUpdate(_id, { token: null })
     res.status(204).json({
@@ -130,10 +155,9 @@ router.post('/current', auth, async (req, res, next) => {
 
 router.patch('/', auth, async (req, res, next) => {
   const { subscription } = req.body
-  console.log(req.body)
   const { _id } = req.user
   const user = await User.findById(_id)
-  console.log(user)
+
   if (user) {
     const result = await User.findByIdAndUpdate(_id, { subscription: subscription })
     res.json({
@@ -207,6 +231,71 @@ router.patch('/avatars', upload.single('avatar'), auth, async (req, res, next) =
       message: 'Unauthorized',
       data: 'Unauthorized',
     })
+  }
+})
+
+router.get('/verify/:verificationToken', auth, async (req, res, next) => {
+  const { _id } = req.user
+  const user = await User.findById(_id)
+
+  if (user) {
+    const result = await User.findByIdAndUpdate(_id, { verify: true, verifyToken: null })
+    res.status(200).json({
+      status: 'success',
+      code: 200,
+      message: 'Verification successful',
+      data: result
+    })
+  } else {
+    return res.status(404).json({
+      status: 'error',
+      code: 404,
+      message: 'User not found',
+    })
+  }
+})
+
+router.post('/verify', auth, async (req, res, next) => {
+  const { email } = req.body
+  const { verify, verifyToken } = req.user
+
+  if (Object.keys(req.body).length === 0) {
+    res.status(400).json({
+      status: 'error',
+      code: 400,
+      message: 'missing required field email',
+      data: 'Not Found',
+    })
+  }
+
+  try {
+    if (!verify) {
+      const emailOptions = {
+        from: 'pavlaherd@gmail.com',
+        to: email,
+        subject: 'Email varification',
+        html: `<a href="http://127.0.0.1/users/verify/${verifyToken}">Email varification</a>`,
+      }
+
+      transporter
+        .sendMail(emailOptions)
+        .then((info) => console.log(info))
+        .catch((err) => console.log(err))
+
+      res.status(200).json({
+        status: 'success',
+        code: 200,
+        message: 'Verification email sent',
+      })
+    } else {
+      return res.status(400).json({
+        status: 'error',
+        code: 400,
+        message: 'Verification has already been passed',
+      })
+    }
+  } catch (err) {
+    console.error(err)
   }
 })
 

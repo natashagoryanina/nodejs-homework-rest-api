@@ -83,7 +83,7 @@ const update = async (req, res, next) => {
 const updateStatus = async (req, res, next) => {
   const { contactId } = req.params
   const { favorite = false } = req.body
-  console.log(typeof req.body)
+
   if (Object.keys(req.body).length === 0) {
     res.status(400).json({
       status: 'error',
@@ -92,6 +92,7 @@ const updateStatus = async (req, res, next) => {
       data: 'Not Found',
     })
   }
+
   try {
     const result = await service.updateContact(contactId, { favorite })
     if (result) {
